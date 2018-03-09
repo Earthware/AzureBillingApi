@@ -73,6 +73,16 @@ namespace CodeHollow.AzureBillingApi
         }
 
         /// <summary>
+        /// Get all tags that are used. Returns the tag values of all used tags. All available tags are part of <see cref="RateCardData"/>
+        /// </summary>
+        /// <param name="costs">list of the costs</param>
+        /// <returns>list of tag values</returns>
+        public static IEnumerable<string> GetUsedTagValues(this IEnumerable<ResourceCosts> costs, string tagName)
+        {
+            return costs.Where(c => c.UsageValue.Properties.InstanceData != null && c.UsageValue.Properties.InstanceData.MicrosoftResources.Tags != null).Select(x => x.UsageValue.Properties.InstanceData.MicrosoftResources.Tags.Where(t => t.Key == tagName).Select(y=>y.Value)).SelectMany(x => x).Distinct();
+        }
+
+        /// <summary>
         /// Returns the meter ids of all used meters. All available meters are part of <see cref="RateCardData"/>
         /// </summary>
         /// <param name="data">resource cost data</param>
@@ -80,6 +90,16 @@ namespace CodeHollow.AzureBillingApi
         public static IEnumerable<string> GetUsedMeterIds(this ResourceCostData data)
         {
             return data.Costs.GetUsedMeterIds();
+        }
+
+        /// <summary>
+        /// Returns the tag values of all used meters. All available meters are part of <see cref="RateCardData"/>
+        /// </summary>
+        /// <param name="data">resource cost data</param>
+        /// <returns>Tag values</returns>
+        public static IEnumerable<string> GetUsedTagValues(this ResourceCostData data, string tagName)
+        {
+            return data.Costs.GetUsedTagValues(tagName);
         }
 
         /// <summary>
@@ -133,6 +153,18 @@ namespace CodeHollow.AzureBillingApi
                     vvalue => value.Costs));
 
             return asdf;
+        }
+
+        /// <summary>
+        /// Returns all costs that are related to the given tag and value
+        /// </summary>
+        /// <param name="costs">list of the costs</param>
+        /// <param name="tagName">name of the tag</param>
+        /// <param name="tagValue">value of the tag</param>
+        /// <returns>list of costs filtered by tag name and value</returns>
+        public static IEnumerable<ResourceCosts> GetCostsByTagNameAndValue(this IEnumerable<ResourceCosts> costs, string tagName, string tagValue)
+        {
+            return (from x in costs where x.UsageValue.Properties.InstanceData != null && x.UsageValue.Properties.InstanceData.MicrosoftResources.Tags != null && x.UsageValue.Properties.InstanceData.MicrosoftResources.Tags.ContainsKey(tagName) && x.UsageValue.Properties.InstanceData.MicrosoftResources.Tags[tagName] == tagValue select x).ToList();
         }
 
         /// <summary>
